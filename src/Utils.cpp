@@ -30,6 +30,44 @@ namespace gf {
     }
 
 
+    void serializeString(const std::string& str, std::vector<char>& buffer) {
+        size_t len = str.size();
+        buffer.insert(buffer.end(), reinterpret_cast<const char*>(&len), reinterpret_cast<const char*>(&len) + sizeof(size_t));
+        buffer.insert(buffer.end(), str.begin(), str.end());
+    }
+
+
+    void deserializeString(std::string& str, const char* &buffer_ptr) {
+        size_t len;
+        std::memcpy(&len, buffer_ptr, sizeof(size_t));
+        buffer_ptr += sizeof(size_t);
+        str.assign(buffer_ptr, len);
+        buffer_ptr += len;
+    }
+
+
+    void broadcastSizetVector(std::vector<size_type>& vec, int root, MPI_Comm comm) {
+        size_type size = vec.size();
+        MPI_Bcast(&size, 1, MPI_SIZE_T, root, comm);
+        if (!getfem::MPI_IS_MASTER()) vec.resize(size);
+        MPI_Bcast(vec.data(), size, MPI_SIZE_T, root, comm);
+    }
+
+
+    void broadcastStringVector(std::vector<std::string>& vec, int root, MPI_Comm comm) {
+        int size = static_cast<int>(vec.size());
+        MPI_Bcast(&size, 1, MPI_INT, root, comm);
+        if (!getfem::MPI_IS_MASTER()) vec.resize(size);
+        for (int i = 0; i < size; ++i) {
+            int len = 0;
+            if (getfem::MPI_IS_MASTER()) len = vec[i].size();
+            MPI_Bcast(&len, 1, MPI_INT, root, comm);
+            if (!getfem::MPI_IS_MASTER()) vec[i].resize(len);
+            MPI_Bcast(&vec[i][0], len, MPI_CHAR, root, comm);
+        }
+    }
+
+
 } // namespace gf
 
 

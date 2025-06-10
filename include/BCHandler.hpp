@@ -4,7 +4,6 @@
 #include "Core.hpp"
 #include "Params.hpp"
 #include "Mesh.hpp"
-#include "GetPot"
 #include "BC.hpp"
 #include "muParserXInterface.hpp"
 
@@ -26,12 +25,12 @@ namespace gf {
         // VectorFunctionType buildBCFunctionFromExpressions(const std::vector<std::string>&);
 
         template <BCType T>
-        void read(const GetPot&);
+        void read(const BCStrings&);
 
     public:
         BCHandler(const getfem::mesh&);
 
-        void readBC(const GetPot &);
+        void readBC(const BCStrings&);
 
         const std::vector<std::unique_ptr<BC>> & Neumann() const;
 

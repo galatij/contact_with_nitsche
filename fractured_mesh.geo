@@ -3,10 +3,10 @@ Mesh.Format = 1;
 
 // ------------ Parameters ------------
 Lx = 1;
-Ly = 2;
-Lz = 2;
+Ly = 4;
+Lz = 4;
 faultX0 = 0.5;
-faultX1 = 0.569842;
+faultX1 = 0.639683;
 h = 0.25;
 
 // ------------ Points ------------
@@ -94,9 +94,3 @@ Physical Volume("BulkLeft") = {101};
 Physical Volume("BulkRight") = {102};
 Physical Surface("Fault") = {1000};
 
-// ------------ Mesh Settings ------------
-Transfinite Line {1:20} = 10 Using Progression 1;
-Transfinite Surface {1,2,3,4,5,6,7,8,9,10,11,1000};
-Transfinite Volume {101, 102};
-Recombine Surface {1,2,3,4,5,6,7,8,9,10,11,1000};
-Recombine Volume {101, 102};

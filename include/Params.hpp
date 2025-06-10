@@ -52,6 +52,15 @@ namespace gf {
          * add backtracking parameters, if needed
          * */
     };
+    
+    struct BCStrings {
+        std::vector<size_type> regionsDirID;
+        std::vector<size_type> regionsNeuID;
+        std::vector<size_type> regionsMixID;
+        std::vector<std::string> stringsDir;
+        std::vector<std::string> stringsNeu;
+        std::vector<std::string> stringsMix;
+    };
 
     struct Params {
         GetPot datafile;
@@ -61,10 +70,13 @@ namespace gf {
         Nitsche nitsche;
         Time time;
         Numerics numerics;
+        BCStrings bc;
         bool verbose = false;
         bool gmsh = false;
         
         Params(int argc, char* argv[]);
+
+        void broadcast(MPI_Comm comm);
         
     };
 

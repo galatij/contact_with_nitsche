@@ -15,7 +15,8 @@ namespace gf {
     void
     BuiltInBuilder::buildMesh(getfem::mesh& mesh) const
     {
-        std::cout << "Building the mesh internally... ";
+        if (getfem::MPI_IS_MASTER())
+            std::cout << "Building the mesh internally... ";
         size_type N = M_domain.dim;
         std::string meshType = M_domain.meshType; // element type for meshing, linear by defaults
 
@@ -47,7 +48,8 @@ namespace gf {
 
         base_small_vector v {-0.5*M_domain.Lx,0.,0.};
         mesh.translation(v);
-        std::cout << "done.\n";
+        if (getfem::MPI_IS_MASTER())
+            std::cout << "done.\n";
 
         //!\todo: need to be sure that i can build the fracture according to the normal ...
 
@@ -57,7 +59,8 @@ namespace gf {
     void
     BuiltInBuilder::initRegions(getfem::mesh& mesh) const
     {
-        std::cout << "Initializing regions... ";
+        if (getfem::MPI_IS_MASTER())
+            std::cout << "Initializing regions... ";
 
         // Create the internal regions BulkLeft, BulkRight, Fault
         dal::bit_vector leftConvexesList;
@@ -221,7 +224,8 @@ namespace gf {
         // //    base_small_vector(-1.,0.,0.), 0.01);
         // // bds(10) = getfem::select_faces_of_normal(mesh, border_faces,
         // //    base_small_vector(1.,0.,0.), 0.01);
-        std::cout << "done." << std::endl;
+        if (getfem::MPI_IS_MASTER())
+            std::cout << "done." << std::endl;
 
     }
 
@@ -231,27 +235,48 @@ namespace gf {
     GmshBuilder::buildMesh(getfem::mesh& mesh) const
     {
 
-        std::cout << "Generating mesh file... ";
-        generateMeshFile();
-        std::cout << "done." << std::endl;
+        if (getfem::MPI_IS_MASTER()){
+            std::cout << "Generating mesh file... ";
+            generateMeshFile();
+            std::cout << "done." << std::endl;
+        }
 
-        std::cout << "Importing the mesh file... ";
+        // Synchronize all processes: wait for the file to be ready
+        MPI_Barrier(MPI_COMM_WORLD);
+
+        if (getfem::MPI_IS_MASTER())
+            std::cout << "Importing the mesh file... ";
+
         using RegMap = std::map<std::string, size_type>;
         RegMap regmap;
-        getfem::import_mesh_gmsh("fractured_mesh.msh", mesh, regmap);
-
-        std::cout << regmap.size() << "\n";
-        for (RegMap::iterator i = regmap.begin(); i != regmap.end(); i++) {
-            std::cout << i->first << " " << i->second << "\n";
+        std::ifstream test("fractured_mesh.msh");
+        if (!test.is_open()) {
+            throw std::runtime_error("Cannot open fractured_mesh.msh");
         }
-        std::cout << "done." << std::endl;
+
+        // Sequentially import the mesh in each rank
+        /** \todo: may be done better with a custom serialized buffer broadcast */
+        int rk; MPI_Comm_rank(MPI_COMM_WORLD, &rk);
+        int sz; MPI_Comm_size(MPI_COMM_WORLD, &sz);
+        for (int r{}; r < sz; ++r)
+            if (r == rk)
+                getfem::import_mesh_gmsh("fractured_mesh.msh", mesh, regmap);
+
+        if (getfem::MPI_IS_MASTER()){
+            // std::cout << regmap.size() << "\n";
+            // for (RegMap::iterator i = regmap.begin(); i != regmap.end(); i++) {
+            //     std::cout << i->first << " " << i->second << "\n";
+            // }
+            std::cout << "done." << std::endl;
+        }
     }
 
     void
     GmshBuilder::initRegions(getfem::mesh& mesh) const
     {
 
-        std::cout << "Initializing regions... ";
+        if (getfem::MPI_IS_MASTER())
+            std::cout << "Initializing regions... ";
 
         getfem::mesh_region &fault_region = mesh.region(Fault);
         const getfem::mesh_region &bulk_region = mesh.region(BulkRight);
@@ -266,10 +291,10 @@ namespace gf {
             // std::cout << "done." << std::endl;
         }
 
-        std::cout << "done." << std::endl;
+        if (getfem::MPI_IS_MASTER())
+            std::cout << "done." << std::endl;
 
     }
-
     
     
     void

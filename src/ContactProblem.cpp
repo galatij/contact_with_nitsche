@@ -21,7 +21,7 @@ namespace gf{
         // std::cout << "Inside ConstactProblem::init()" << std::endl;
         // std::cout << M_params.numerics.FEMTypeRhs << std::endl;
 
-        M_BC.readBC(M_params.datafile);
+        M_BC.readBC(M_params.bc);
 
         M_FEM.setMeshFem(M_params.numerics, M_mesh.get());
 
@@ -38,24 +38,24 @@ namespace gf{
     {
         using getfem::MPI_IS_MASTER;
 
-        if (MPI_IS_MASTER) std::cout << "Preparing the assembly phase:\n";
+        if (MPI_IS_MASTER()) std::cout << "Preparing the assembly phase:\n";
         
-        gmm::set_traces_level(1);
+        // gmm::set_traces_level(1);
         
         dim_type dim = M_mesh.get().dim();
         size_type nb_dof_rhs = M_FEM.mf_rhs().nb_dof();
 
         // Main unknown of the problem (displacement)
-        if (MPI_IS_MASTER) std::cout << "  Defining variables...";
+        if (MPI_IS_MASTER()) std::cout << "  Defining variables...";
         
         M_model.add_fem_variable("uL", M_FEM.mf_u1());
         M_model.add_fem_variable("uR", M_FEM.mf_u2());
         
-        if (MPI_IS_MASTER) std::cout << "done.\n";
+        if (MPI_IS_MASTER()) std::cout << "done.\n";
 
 
         // Add scalar data to the model
-        if (MPI_IS_MASTER) std::cout << "  Initializing scalar data...";
+        if (MPI_IS_MASTER()) std::cout << "  Initializing scalar data...";
         
         M_model.add_initialized_scalar_data("lambda", M_params.physics.M_lambda);
         M_model.add_initialized_scalar_data("mu", M_params.physics.M_mu);
@@ -63,11 +63,11 @@ namespace gf{
         M_model.add_initialized_scalar_data("theta", M_params.nitsche.theta);  // symmetric variant
         M_model.add_initialized_scalar_data("mu_fric", M_params.physics.M_mu_friction);
         
-        if (MPI_IS_MASTER) std::cout << "done.\n";
+        if (MPI_IS_MASTER()) std::cout << "done.\n";
 
 
         // Define some useful macro for Nitsche contact integrals
-        if (MPI_IS_MASTER) std::cout << "  Defining macros...";
+        if (MPI_IS_MASTER()) std::cout << "  Defining macros...";
 
         M_model.add_initialized_scalar_data("eps", 1.e-20);
         M_model.add_macro("n", "Normal"); // use normal on contact face
@@ -116,22 +116,22 @@ namespace gf{
         M_model.add_macro("proj_Pt1_u", "Pt1_u * min(1, Sh / (norm_Pt + eps))");
         M_model.add_macro("proj_Pt2_u", "Pt2_u * min(1, Sh / (norm_Pt + eps))");
 
-        if (MPI_IS_MASTER) std::cout << "done.\n";
+        if (MPI_IS_MASTER()) std::cout << "done.\n";
 
 
         // Add isotropic elasticity bricks
-        if (MPI_IS_MASTER) std::cout << "  Adding elasticity bricks...";
+        if (MPI_IS_MASTER()) std::cout << "  Adding elasticity bricks...";
         
         getfem::add_isotropic_linearized_elasticity_brick(
             M_model, M_integrationMethod, "uL", "lambda", "mu", RegionType::BulkLeft);
         getfem::add_isotropic_linearized_elasticity_brick(
             M_model, M_integrationMethod, "uR", "lambda", "mu", RegionType::BulkRight);
         
-        if (MPI_IS_MASTER) std::cout << "done.\n";
+        if (MPI_IS_MASTER()) std::cout << "done.\n";
 
 
         // Add linear stress brick
-        if (MPI_IS_MASTER) std::cout << "  Adding linear stress brick...";
+        if (MPI_IS_MASTER()) std::cout << "  Adding linear stress brick...";
 
         getfem::add_linear_term(
             M_model,
@@ -144,11 +144,11 @@ namespace gf{
             false /** check */
         );
 
-        if (MPI_IS_MASTER) std::cout << "done.\n";
+        if (MPI_IS_MASTER()) std::cout << "done.\n";
 
 
         // Add KKT condition brick
-        if (MPI_IS_MASTER) std::cout << "  Adding KKT condition brick...";
+        if (MPI_IS_MASTER()) std::cout << "  Adding KKT condition brick...";
 
         getfem::add_nonlinear_term(
             M_model,
@@ -160,11 +160,11 @@ namespace gf{
             "KKTbrick"
         );
 
-        if (MPI_IS_MASTER) std::cout << "done.\n";
+        if (MPI_IS_MASTER()) std::cout << "done.\n";
 
 
         // Add Coulomb condition brick
-        if (MPI_IS_MASTER) std::cout << "  Adding Coulomb friction brick...";
+        if (MPI_IS_MASTER()) std::cout << "  Adding Coulomb friction brick...";
         
         getfem::add_nonlinear_term(
             M_model,
@@ -176,7 +176,7 @@ namespace gf{
             "CoulombBrick"
         );
         
-        if (MPI_IS_MASTER) std::cout << "done.\n";
+        if (MPI_IS_MASTER()) std::cout << "done.\n";
 
 
         getfem::add_nonlinear_term(
@@ -200,7 +200,7 @@ namespace gf{
 
         
         // Volumic source term (gravity)
-        if (MPI_IS_MASTER) std::cout << "  Adding volumic source term brick...";
+        if (MPI_IS_MASTER()) std::cout << "  Adding volumic source term brick...";
         
         plain_vector G(M_FEM.mf_rhs().nb_dof()*dim);
 
@@ -211,11 +211,11 @@ namespace gf{
         getfem::add_source_term_brick(M_model, M_integrationMethod, "uL", "VolumicData", BulkLeft);
         getfem::add_source_term_brick(M_model, M_integrationMethod, "uR", "VolumicData", BulkRight);
         
-        if (MPI_IS_MASTER) std::cout << "done.\n";
+        if (MPI_IS_MASTER()) std::cout << "done.\n";
 
 
         // Neumann conditions
-        if (MPI_IS_MASTER) std::cout << "  Adding Neumann condition bricks...";
+        if (MPI_IS_MASTER()) std::cout << "  Adding Neumann condition bricks...";
         
         const auto & NeumannBCs = M_BC.Neumann();
         plain_vector F(nb_dof_rhs*dim);
@@ -232,10 +232,10 @@ namespace gf{
             else
                 getfem::add_source_term_brick(M_model, M_integrationMethod,"uR",bc->name(),bc->ID());
         }
-        std::cout << "done.\n";
+        if (MPI_IS_MASTER()) std::cout << "done.\n";
 
         // Dirichlet conditions
-        std::cout << "  Adding Dirichlet condition bricks...";
+        if (MPI_IS_MASTER()) std::cout << "  Adding Dirichlet condition bricks...";
         const auto & DirichletBCs = M_BC.Dirichlet();
         plain_vector D(nb_dof_rhs*dim);
 
@@ -259,11 +259,11 @@ namespace gf{
                      bc->name());
         }
 
-        if (MPI_IS_MASTER) std::cout << "done.\n";
+        if (MPI_IS_MASTER()) std::cout << "done.\n";
 
 
         // Mixed conditions (normal Dirichlet)
-        if (MPI_IS_MASTER) std::cout << "  Adding normal Dirichlet condition bricks...";
+        if (MPI_IS_MASTER()) std::cout << "  Adding normal Dirichlet condition bricks...";
 
         const auto & MixedBCs = M_BC.Mixed();
         plain_vector M(nb_dof_rhs);
@@ -289,7 +289,7 @@ namespace gf{
                     (M_model, M_integrationMethod, "uR", M_FEM.mf_rhs(), bc->ID(), bc->name());  
         }
 
-        if (MPI_IS_MASTER) std::cout << "done.\n";
+        if (MPI_IS_MASTER()) std::cout << "done.\n";
 
     }
 
@@ -298,10 +298,10 @@ namespace gf{
 
         using getfem::MPI_IS_MASTER;
 
-        if (MPI_IS_MASTER) std::cout << "Solving the problem..." << std::endl;
+        if (MPI_IS_MASTER()) std::cout << "Solving the problem..." << std::endl;
 
         const auto & NeumannBCs = M_BC.Neumann();
-        gmm::set_traces_level(1);
+        gmm::set_traces_level(0);
         
         dim_type dim = M_mesh.get().dim();
         size_type nb_dof_rhs = M_FEM.mf_rhs().nb_dof();
@@ -314,7 +314,7 @@ namespace gf{
 
         for (size_type i{}; i < n_timesteps; ++i)
         {
-            if (MPI_IS_MASTER) std::cout << "t = " << t << std::endl;
+            if (MPI_IS_MASTER()) std::cout << "t = " << t << std::endl;
             // Neumann conditions
             for (const auto& bc: NeumannBCs){
                 const auto& rg = bc->getRegion();
@@ -326,13 +326,11 @@ namespace gf{
             }
 
             // Setup parallel solver — choose one of:
-            // getfem::default_linear_solver("mumps")
-            // getfem::default_linear_solver("petsc")
             // M_model.set_linear_solver(getfem::default_linear_solver("mumps"));
             // M_model.set_linear_solver(getfem::default_linear_solver("petsc")); // alternative
 
             // Solve the problem
-            gmm::iteration iter(M_params.it.atol, 1, M_params.it.maxIt);
+            gmm::iteration iter(M_params.it.rtol, 1, M_params.it.maxIt);
             getfem::standard_solve(M_model,iter);
 
             // Export results

@@ -1,5 +1,6 @@
 #ifndef _CORE_HPP_
 #define _CORE_HPP_
+#define MPI_SIZE_T MPI_UNSIGNED_LONG_LONG
 
 // Level Set and Xfem stuff:
 #include <getfem/getfem_regular_meshes.h>
@@ -33,6 +34,7 @@
 #include <boost/shared_ptr.hpp>
 #include <iomanip>
 #include <functional>
+#include <mpi.h>
 
 
 

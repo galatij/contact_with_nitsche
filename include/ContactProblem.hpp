@@ -12,9 +12,9 @@ namespace gf{
 
     /** \todo: update
      * @brief The main class that orchestrates the problem for contact mechanics.
-     * It stores the GetPot and the datafile, which needs to be shared between the different classes.
-     * It allows to perfom 3d simulation on a 3D parallelepiped, with a structured conforming mesh, cut by
-     * a plane at x=0 with normal aligned to the x-axis.
+     * It stores the Params which needs to be shared between the different classes.
+     * It allows to perfom 3D simulation on a 3D parallelepiped, with a structured conforming mesh, cut by
+     * a plane at x=0 with normal aligned to the x-axis. \todo!!!
      */
     class ContactProblem {
     public:

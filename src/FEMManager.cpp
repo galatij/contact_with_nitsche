@@ -11,7 +11,8 @@ namespace gf {
 
     void FEMManager::setMeshFem(const Numerics &n, const getfem::mesh& mesh){
         
-        std::cout << "Setting Finite Element... ";
+        if (getfem::MPI_IS_MASTER())
+            std::cout << "Setting Finite Element... ";
 
         // /** \DEBUG: */
         // std::cout << "FEMtypeDisp: " << n.FEMTypeDisplacement << std::endl;
@@ -30,7 +31,8 @@ namespace gf {
         M_mfStress2.set_qdim(3,3);
         M_mfRhs.set_finite_element(pfRhs);
 
-        std::cout << "done." << std::endl;
+        if (getfem::MPI_IS_MASTER())
+            std::cout << "done." << std::endl;
 
     }
 
