@@ -15,6 +15,8 @@ namespace gf {
     void
     BuiltInBuilder::buildMesh(getfem::mesh& mesh) const
     {
+        MPI_Barrier(MPI_COMM_WORLD);
+
         if (getfem::MPI_IS_MASTER())
             std::cout << "Building the mesh internally... ";
         size_type N = M_domain.dim;
@@ -50,8 +52,6 @@ namespace gf {
         mesh.translation(v);
         if (getfem::MPI_IS_MASTER())
             std::cout << "done.\n";
-
-        //!\todo: need to be sure that i can build the fracture according to the normal ...
 
     }
 
@@ -244,15 +244,16 @@ namespace gf {
         // Synchronize all processes: wait for the file to be ready
         MPI_Barrier(MPI_COMM_WORLD);
 
-        if (getfem::MPI_IS_MASTER())
+        if (getfem::MPI_IS_MASTER()) {
             std::cout << "Importing the mesh file... ";
+            std::ifstream test("fractured_mesh.msh");
+            if (!test.is_open()) {
+                throw std::runtime_error("Cannot open fractured_mesh.msh");
+            }
+        }
 
         using RegMap = std::map<std::string, size_type>;
         RegMap regmap;
-        std::ifstream test("fractured_mesh.msh");
-        if (!test.is_open()) {
-            throw std::runtime_error("Cannot open fractured_mesh.msh");
-        }
 
         // Sequentially import the mesh in each rank
         /** \todo: may be done better with a custom serialized buffer broadcast */

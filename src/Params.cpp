@@ -30,8 +30,8 @@ namespace gf {
             domain.h = datafile("domain/h", 0.2);
             domain.angle = datafile("domain/angle", 0.);
             domain.Nx = static_cast<int>(domain.Lx/domain.h);
-            domain.Ny = static_cast<int>(domain.Ly/domain.h);
-            domain.Nz = static_cast<int>(domain.Lz/domain.h);
+            domain.Ny = static_cast<int>(domain.Ly/domain.h / (domain.Ly/domain.Lx));
+            domain.Nz = static_cast<int>(domain.Lz/domain.h / (domain.Lz/domain.Lx));
             domain.meshType = datafile("domain/meshType", "GT_QK(3,1)");
             
             physics.M_E0 = datafile("physics/E", 0.0);
@@ -122,6 +122,11 @@ namespace gf {
         // Broadcast
         broadcast(MPI_COMM_WORLD);
 
+        int rank;
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        if (rank == 1)
+            std::cout << "From rank 1: " << *this << std::endl;
+
     }
 
     std::ostream& operator<<(std::ostream& os, const Params& p){
@@ -142,10 +147,51 @@ namespace gf {
            << p.physics.M_gravity[0] << ", "
            << p.physics.M_gravity[1] << ", "
            << p.physics.M_gravity[2] << "]\n";
+        os << "-- mu_friction = " << p.physics.M_mu_friction << "\n";
         os << "IT:\n";
         os << "--maxit = " << p.it.maxIt << "\n";
         os << "--rtol = " << p.it.rtol << "\n";
         os << "--atol = " << p.it.atol << "\n";
+        os << "NITSCHE:\n";
+        os << "--theta = " << p.nitsche.theta << "\n";
+        os << "--gamma0 = " << p.nitsche.gamma0 << "\n";
+        os << "TIME:\n";
+        os << "--t0 = " << p.time.t0 << "\n";
+        os << "--tend = " << p.time.tend << "\n";
+        os << "--dt = " << p.time.dt << "\n";
+        os << "NUMERICS:\n";
+        os << "--integration = " << p.numerics.integration << "\n";
+        os << "--FEMTypeDisplacement = " << p.numerics.FEMTypeDisplacement << "\n";
+        os << "--FEMTypeStress = " << p.numerics.FEMTypeStress << "\n";
+        os << "--FEMTypeRhs = " << p.numerics.FEMTypeRhs << "\n";
+        os << "BC STRINGS:\n";
+        os << "-- regionsDirID: ";
+        for (const auto& id : p.bc.regionsDirID) {
+            os << id << " ";
+        }
+        os << "\n-- regionsNeuID: ";
+        for (const auto& id : p.bc.regionsNeuID) {
+            os << id << " ";
+        }
+        os << "\n-- regionsMixID: ";
+        for (const auto& id : p.bc.regionsMixID) {
+            os << id << " ";
+        }
+        os << "\n-- stringsDir: ";
+        for (const auto& str : p.bc.stringsDir) {
+            os << str << " ";
+        }
+        os << "\n-- stringsNeu: ";
+        for (const auto& str : p.bc.stringsNeu) {
+            os << str << " ";
+        }
+        os << "\n-- stringsMix: ";
+        for (const auto& str : p.bc.stringsMix) {
+            os << str << " ";
+        }
+        os << "\nVERBOSE: " << (p.verbose ? "true" : "false") << "\n";
+        os << "GMSH: " << (p.gmsh ? "true" : "false") << "\n";
+        os << "============================================\n";
         /** \todo: print other parameters */
     
         return os;

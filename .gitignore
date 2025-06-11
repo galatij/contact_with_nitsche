@@ -4,4 +4,6 @@
 *.d
 *.log
 *.vtk
+*.geo
+*.msh
 main

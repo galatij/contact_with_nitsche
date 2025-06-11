@@ -3,10 +3,10 @@ Mesh.Format = 1;
 
 // ------------ Parameters ------------
 Lx = 1;
-Ly = 4;
-Lz = 4;
+Ly = 2;
+Lz = 2;
 faultX0 = 0.5;
-faultX1 = 0.639683;
+faultX1 = 0.569842;
 h = 0.25;
 
 // ------------ Points ------------
