@@ -122,6 +122,7 @@ namespace gf {
         // Broadcast
         broadcast(MPI_COMM_WORLD);
 
+        // Just for debug
         int rank;
         MPI_Comm_rank(MPI_COMM_WORLD, &rank);
         if (rank == 1)
@@ -192,8 +193,7 @@ namespace gf {
         os << "\nVERBOSE: " << (p.verbose ? "true" : "false") << "\n";
         os << "GMSH: " << (p.gmsh ? "true" : "false") << "\n";
         os << "============================================\n";
-        /** \todo: print other parameters */
-    
+            
         return os;
     };
 
