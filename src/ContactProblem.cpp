@@ -71,10 +71,8 @@ namespace gf{
 
         M_model.add_initialized_scalar_data("eps", 1.e-20);
         M_model.add_macro("n", "Normal"); // use normal on contact face
-        /** \todo: add macros for t1, t2 */
-        // Choose auxiliary vector `a` robustly
         M_model.add_macro("eps_dir", "1e-4"); // to avoid numerical degeneracies
-        M_model.add_macro("a", "[0, 1, 0]");
+        M_model.add_macro("a", "[0, 1, 0]"); /** \todo Modify to be more robust... */
 
         // Project a onto plane orthogonal to n
         M_model.add_macro("t1_raw", "a - (a . n) * n");
@@ -325,10 +323,7 @@ namespace gf{
                 gmm::copy(F, M_model.set_real_variable(bc->name()));
             }
 
-            // Setup parallel solver — choose one of:
-            // M_model.set_linear_solver(getfem::default_linear_solver("mumps"));
-            // M_model.set_linear_solver(getfem::default_linear_solver("petsc")); // alternative
-
+            /** \todo Customize the choice of the solver */
             // Solve the problem
             gmm::iteration iter(M_params.it.rtol, 1, M_params.it.maxIt);
             getfem::standard_solve(M_model,iter);
